@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Diagnóstico de VE Leve</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a7d5a">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Diag VE">
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--tx:#14202b;--mut:#5b6b7a;--ac:#0a7d5a;--acx:#fff;--bd:#d8e0e7;--ok:#0a7d5a;--bad:#c0392b;--warn:#fff6dc;--warnb:#e0b94a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10171d;--card:#18222b;--tx:#e8eef3;--mut:#9fb0be;--ac:#2fbf90;--acx:#06251b;--bd:#2a3844;--ok:#2fbf90;--bad:#ff7b6b;--warn:#2b2614;--warnb:#7a6420}}
+:root[data-theme="dark"]{--bg:#10171d;--card:#18222b;--tx:#e8eef3;--mut:#9fb0be;--ac:#2fbf90;--acx:#06251b;--bd:#2a3844;--ok:#2fbf90;--bad:#ff7b6b;--warn:#2b2614;--warnb:#7a6420}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:4px 0 2px}
+.sub{color:var(--mut);font-size:14px;margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:12px}
+.q{font-size:18px;font-weight:600;margin:0 0 10px}
+.test{background:var(--warn);border:1px solid var(--warnb);border-radius:10px;padding:10px 12px;font-size:14.5px;margin-bottom:12px}
+.test b{display:block;margin-bottom:2px}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:12px 14px;width:100%;text-align:left;margin-bottom:8px}
+button.p{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weight:600;text-align:center}
+button.g{width:auto;font-size:14px;padding:8px 12px;text-align:center;color:var(--mut)}
+.bar{height:4px;background:var(--bd);border-radius:4px;margin-bottom:12px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ac)}
+.tag{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ac)}
+.res h2{font-size:22px;margin:4px 0 6px}
+.res ol{padding-left:20px;margin:8px 0}
+.res li{margin-bottom:6px}
+.hist{font-size:13.5px;color:var(--mut);margin:0;padding-left:18px}
+details{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:14px}summary{cursor:pointer;font-weight:600;color:var(--ac)}details p{margin:6px 0 2px;color:var(--mut)}
+.safe{font-size:13px;color:var(--mut);margin-top:14px}
+</style>
+</head>
+<body>
+<main>
+<h1>⚡ Diagnóstico de VE leve</h1>
+<p class="sub">Bicicletas, patinetes, ciclomotores e autopropelidos elétricos</p>
+<div id="app"></div>
+<p class="safe">⚠️ Segurança: desligue e desconecte a bateria antes de mexer em fiação. Faça medições com tensão apenas se souber o que está fazendo, mantendo a roda suspensa e sem contato com partes vivas. Valores típicos variam por fabricante: confira o manual do seu modelo.</p>
+</main>
+<script>
+// Fluxo: n = perguntas; r = resultados
+const n={
+s:{q:"Qual é o sintoma principal?",o:[["Não liga / display apagado","b1"],["Liga, mas o motor não responde","nr"],["Corta ou falha de forma intermitente","c1"],["Só o acelerador não funciona","t1"],["Só a assistência (PAS) não funciona","p1"],["Trancos, zumbido ou vibração ao partir","h1"],["Freio não corta o motor / motor não volta","k1"],["Esquentando demais","e1"],["Autonomia baixa / bateria suspeita","bt1"]]},
+b1:{i:"O pack Li-ion é formado por grupos de células em série (S) e paralelo (P). O BMS monitora cada grupo, balanceia e protege com MOSFETs contra sobretensão (~4,25V/célula), subtensão (~2,5–3,0V), sobrecorrente e curto. Esperado: tensão de pack proporcional a 3,6–3,7V nominal e 4,2V cheia por célula.",q:"A tensão da bateria nos terminais está normal?",t:"Meça com multímetro em DC. Referência: 36V nominal ≈ 42V cheia; 48V ≈ 54,6V; 60V ≈ 67,2V. Abaixo de ~30V (36V) ou ~40V (48V) está descarregada.",o:[["Normal","b2"],["Baixa ou zero","b3"]]},
+b3:{q:"Com o carregador ligado, a tensão sobe e o carregador indica carga?",t:"Antes, meça a saída do carregador sem a bateria: deve marcar a tensão de carga cheia (ex.: 42V, 54,6V).",o:[["Sim, carrega","bt1"],["Não carrega / tensão fica em zero","bt0"]]},
+b2:{q:"Com a chave ligada, o display ou LED acende?",o:[["Sim","nr"],["Não","b4"]]},
+b4:{q:"Há a mesma tensão da bateria no conector de entrada da controladora?",t:"Meça nos fios vermelho (+) e preto (−) de entrada, com a bateria conectada e a chave ligada.",o:[["Sim, tem tensão","rCtrlPw"],["Não, sem tensão","rCon"]]},
+nr:{i:"A controladora lê acelerador, PAS, freios e Hall, e comuta as 3 fases com MOSFETs. Qualquer sinal de freio ativo, tensão fora da faixa ou falha de Hall pode bloquear a saída (proteção), então teste os periféricos antes de condenar a controladora.",q:"Com a roda suspensa e os sensores de freio desconectados, o motor responde ao acelerador ou PAS?",t:"Desligue, desconecte os conectores dos sensores/manetes de freio, ligue e teste.",o:[["Sim, passou a funcionar","rBrk"],["Continua sem resposta","t2"]]},
+t1:{i:"O acelerador usa um sensor Hall (ou potenciômetro) que converte o curso em tensão. Esperado: alimentação ~5V, sinal de ~0,8–1,2V em repouso a ~4,0–4,2V a fundo, variação contínua. Acima/abaixo disso, a controladora pode ignorar o sinal (proteção).",q:"O acelerador recebe ~5V entre os fios de alimentação?",t:"Chave ligada: meça entre fio vermelho (+5V) e preto (GND) no conector do acelerador.",o:[["Sim, ~5V","t2"],["Não, 0V ou muito diferente","r5v"]]},
+t2:{q:"O sinal do acelerador varia conforme você aciona?",t:"Meça entre fio de sinal (verde) e GND. Em repouso: ~0,8–1,2V; a fundo: ~4,0–4,2V. Deve subir de forma suave.",o:[["Varia corretamente","nr3"],["Fixo, zero ou com saltos","rThr"]]},
+nr3:{q:"Com a roda suspensa e acelerando, o motor faz algum barulho ou tenta girar?",o:[["Zumbe, vibra ou trava","h1"],["Silêncio total","rCtrl"]]},
+p1:{i:"O PAS (cadência) tem 1–2 sensores Hall que leem ímãs num disco na pedivela. Esperado: 5V de alimentação e pulsos 0↔5V ao girar. Sentido ao contrário ou desalinhamento gera falha ou assistência invertida.",q:"Como o PAS se comporta ao pedalar?",o:[["Não reage nunca","p2"],["Só funciona pedalando para trás","rPasInv"],["Falha, é intermitente ou demora","p3"]]},
+p3:{q:"O disco magnético está firme e os ímãs passam a 2–3 mm do sensor?",t:"Inspecione visualmente. Parafusos soltos, disco girando livre, sensor sujo ou desalinhado causam falha.",o:[["Sim, mecânica ok","p2"],["Não, solto/desalinhado/sujo","rPasAl"]]},
+p2:{q:"O PAS recebe ~5V e o sinal alterna entre ~0V e ~5V ao girar os pedais?",t:"Meça entre +5V e GND, depois entre sinal e GND enquanto gira o pedal.",o:[["Tem 5V e o sinal alterna","p4"],["Tem 5V, mas o sinal não alterna","rPas"],["Não tem 5V","r5v"]]},
+p4:{q:"Com os freios desconectados, a assistência volta a funcionar?",o:[["Sim","rBrk"],["Não","rCtrlPas"]]},
+k1:{i:"A manete de freio tem um sensor (Hall ou chave) que aterra/sinaliza a controladora para cortar o motor ao frear. Esperado: troca de estado nítida ao acionar e retorno total ao soltar.",q:"Com a roda suspensa, acione o freio. O que acontece?",o:[["Motor não corta ao frear","rBrkOpen"],["Motor corta, mas não volta ao soltar","rBrk"]]},
+c1:{q:"O corte some ao desconectar acelerador, PAS e freios?",t:"Desconecte os três, rode e observe. Depois reconecte um de cada vez, rodando alguns minutos entre cada um.",o:[["Sim, o corte some","c2"],["Não, continua cortando","c3"]]},
+c2:{q:"Qual periférico faz o corte voltar ao reconectar?",o:[["Freio","rBrk"],["Acelerador","rThr"],["PAS","rPas"],["Nenhum isoladamente (só em uso real)","rCon"]]},
+c3:{q:"O display permanece aceso durante o corte?",o:[["Sim, fica aceso","h1"],["Não, apaga","c4"]]},
+c4:{q:"A tensão da bateria despenca sob carga (ex.: 36V cai abaixo de ~31V) ou o BMS desarma?",t:"Meça a tensão no conector da controladora enquanto acelera forte (com a roda suspensa e depois em subida).",o:[["Sim, cai muito","bt1"],["Não, tensão estável","rCon"]]},
+h1:{i:"Motor BLDC/cubo: 3 sensores Hall posicionam o rotor para a controladora comutar as 3 fases. Esperado: cada Hall alterna 0↔5V por ciclo; fases com resistência baixa (<1Ω) e iguais; sem fuga à carcaça.",q:"As 3 saídas Hall do motor alternam entre ~0V e ~5V ao girar a roda devagar?",t:"Desconecte o conector Hall do motor. Alimente 5V (vermelho) e GND (preto). Meça cada fio de sinal (azul, verde, amarelo) enquanto gira a roda manualmente.",o:[["Sim, as 3 alternam","h2"],["Alguma fica fixa ou sem sinal","rHall"]]},
+h2:{q:"A resistência entre as 3 fases do motor é baixa e igual nos três pares?",t:"Desconecte o cabo de fase (3 fios grossos) e meça entre pares. Esperado: valores muito baixos (<1Ω) e iguais. Meça também contra a carcaça: deve ser aberto (infinito).",o:[["Sim, iguais e sem fuga","rCtrl"],["Diferentes, aberto ou com fuga","rWind"]]},
+e1:{q:"O que está esquentando?",o:[["Motor","e2"],["Controladora","e3"],["Bateria","rBatHeat"]]},
+e2:{q:"Desligado, a roda gira livre e sem ruído?",o:[["Sim, gira livre","h1"],["Não, trava, arrasta ou range","rMec"]]},
+e3:{q:"A corrente configurada é compatível com motor e bateria, e os conectores/fios estão frios?",o:[["Sim","rCtrl"],["Não, conector quente ou fio fino","rWire"]]},
+bt0:{q:"O carregador, medido sem a bateria, entrega a tensão de fim de carga (ex.: 42V, 54,6V, 67,2V)?",t:"Meça a saída do carregador a vazio. Se for 0V ou muito abaixo, ele está defeituoso. Alguns carregadores só ligam se detectam a bateria: verifique o LED de status.",o:[["Sim, tensão correta","bt1"],["Não, 0V ou fora do esperado","rChg"]]},
+bt1:{i:"Desbalanceamento aparece como diferença de tensão entre grupos em repouso. Células saudáveis ficam entre 3,0 e 4,2V; abaixo de ~2,5V há risco de dano permanente.",q:"Em repouso, a tensão por grupo de células está equilibrada?",t:"Com a bateria em repouso por 1 h, meça cada grupo no conector de balanceamento (ou nos pontos de solda), com o BMS desconectado do pack se possível. Esperado: diferença entre o maior e o menor grupo ≤ 0,03–0,05V. Abaixo de 2,5V em algum grupo indica célula profundamente descarregada.",o:[["Diferença ≤ 0,05V","bt2"],["Diferença > 0,1V","rUnbal"],["Algum grupo < 2,5V ou 0V","rDeadCell"]]},
+bt2:{q:"Sob carga, a queda de tensão é pequena e nenhum grupo cai abaixo de ~3,0V?",t:"Com a bateria cheia, aplique carga (controladora com roda suspensa acelerando a fundo, ou carga eletrônica). Acompanhe pack e cada grupo. Esperado: queda < ~10% do pack e grupos acima de ~3,0V. Estime a resistência interna: ΔV ÷ I; valores muito acima do novo indicam envelhecimento.",o:[["Sim, queda pequena","bt3"],["Não, queda grande ou um grupo cai primeiro","rHighIR"]]},
+bt3:{q:"A tensão entre B− e P− (saída) com as células ok é igual à do pack?",t:"Meça entre o negativo do pack (B−) e o negativo de saída (P−). Esperado: ≈ 0V sem carga, e tensão na saída igual à do pack. Diferença próxima da tensão do pack sugere MOSFET de descarga aberto ou BMS em proteção.",o:[["Saída = tensão do pack","rBatOk"],["Saída 0V ou diferente com células ok","bt4"]]},
+bt4:{q:"Ao ativar o BMS (carregador por alguns segundos ou remoção de carga), a saída volta?",t:"Desconecte tudo da saída, conecte o carregador por ~10–30 s e meça a saída novamente. Se voltar, o BMS estava em proteção. Verifique também curto a jusante (resistência entre + e − da entrada da controladora, sem bateria).",o:[["Sim, voltou","rBmsTrip"],["Não, continua sem saída","rBmsFail"]]}
+};
+const r={
+rBatDeg:{c:"Bateria (células degradadas)",d:"A bateria carrega, mas não sustenta a tensão. Provável célula fraca ou desbalanceada.",a:["Meça a tensão de cada grupo de células, se acessível: diferença acima de 0,1–0,2V indica desbalanceamento.","Teste sob carga: se a tensão cai muito ao acelerar, faça reparo ou troca do pack.","Evite usar até descarga total."]},
+rBms:{c:"BMS em proteção ou carregador defeituoso",d:"A bateria não aceita carga: o BMS pode ter desarmado por subtensão ou curto, ou o carregador está com defeito.",a:["Teste o carregador sozinho: deve marcar a tensão de carga cheia.","Conecte o carregador por alguns minutos para tentar reativar o BMS.","Se continuar em 0V, procure um técnico: BMS ou célula danificada."]},
+rBatSag:{c:"Bateria (queda de tensão sob carga) ou BMS desarmando",d:"A tensão cai demais sob corrente e a controladora ou o BMS cortam a potência.",a:["Recarregue e repita o teste com a bateria cheia.","Verifique conector principal (aquecimento, oxidação).","Bateria com mais de ~500–800 ciclos ou células fracas: reparo ou troca."]},
+rChg:{c:"Carregador defeituoso",d:"A saída a vazio não atinge a tensão de fim de carga.",a:["Confirme a especificação (tensão e conector) do carregador.","Teste com um carregador compatível conhecido.","Se o fusível/fonte interna estiver aberto, substitua o carregador."]},
+rUnbal:{c:"Bateria: células desbalanceadas",d:"Diferença elevada entre grupos em repouso: balanceamento do BMS ineficaz ou célula com maior autodescarga. Provoca cortes prematuros (subtensão de um grupo) mesmo com o pack em tensão aparentemente boa.",a:["Carregue lentamente com balanceador externo até igualar os grupos.","Reteste após 24–48 h: se voltar a divergir, a célula tem autodescarga alta e deve ser trocada.","Verifique os fios de balanceamento e o conector do BMS."]},
+rDeadCell:{c:"Bateria: célula/grupo em subtensão profunda ou aberto",d:"Grupo abaixo de ~2,5V ou 0V: célula danificada por descarga profunda, fusível de célula aberto ou solda rompida. Risco de dano permanente e segurança.",a:["Não carregue em carregador comum. Isole o grupo e inspeciona fusíveis, soldas e tiras de níquel.","Se for fio/solda, repare; se for célula, substitua o grupo (ou o pack, se envelhecido).","Use células de mesma marca, capacidade e estado de carga ao substituir."]},
+rHighIR:{c:"Bateria: resistência interna alta (células envelhecidas)",d:"A queda de tensão sob carga acima do esperado indica células degradadas ou contato ruim nas tiras de níquel. O BMS corta por subtensão do grupo mais fraco; a controladora também pode cortar por tensão baixa.",a:["Identifique o grupo que cai primeiro: ele é a célula mais fraca.","Meça capacidade real (descarga controlada) e compare com a nominal: abaixo de ~70% indica fim de vida.","Reconstrua o pack com células novas ou troque a bateria."]},
+rBatOk:{c:"Bateria e BMS dentro do esperado",d:"Células equilibradas, queda de tensão normal e saída do BMS presente. A causa está em outro componente.",a:["Volte e escolha outro sintoma para testar controladora, sensores ou motor.","Verifique conectores principais e queda de tensão no chicote."]},
+rBmsTrip:{c:"BMS em proteção (desarmou)",d:"O BMS cortou a saída por sobrecorrente, curto ou subtensão e foi reativado. A causa costuma estar a jusante.",a:["Meça resistência entre + e − da entrada da controladora: curto indica MOSFET da controladora em curto.","Verifique cabos de fase e conectores em curto.","Confirme que a corrente da controladora não excede a corrente contínua do BMS."]},
+rBmsFail:{c:"BMS defeituoso (MOSFET de descarga aberto ou falha de controle)",d:"Com células boas e sem reativação, a saída continua em 0V: MOSFET de descarga aberto, fusível ou circuito de controle danificado.",a:["Confirme a continuidade do shunt/fusível e das soldas B−/P−.","Troque o BMS por outro de mesma configuração (S), corrente contínua e protocolo (UART/CAN, se houver).","Reteste balanceamento e proteções após a troca."]},
+rBatHeat:{c:"Bateria superaquecendo",d:"Aquecimento anormal indica sobrecorrente, célula defeituosa ou curto interno.",a:["Pare de usar imediatamente.","Não carregue.","Procure assistência técnica: risco de incêndio."]},
+rCtrlPw:{c:"Controladora (sem alimentação interna)",d:"Há tensão na entrada, mas a controladora não liga. Provável falha da fonte interna ou fio de ignição.",a:["Verifique o fio de ignição/chave e o display.","Teste com outra controladora compatível, se houver.","Se confirmado, substitua a controladora."]},
+rCon:{c:"Conectores, fiação ou chave/fusível",d:"A energia não chega ou chega intermitente: mau contato, cabo rompido ou oxidação.",a:["Reencaixe e inspecione todos os conectores principais.","Procure fios descascados, dobras e corrosão perto do chicote e do cubo.","Teste continuidade do cabo e do fusível/chave."]},
+rBrk:{c:"Sensor/manete de freio (travado ligado)",d:"O sensor sinaliza freio acionado o tempo todo e bloqueia acelerador e PAS.",a:["Confirme que a manete retorna totalmente e sem folga.","Teste a continuidade/sinal do sensor Hall ou chave do freio.","Realinhe o ímã/sensor ou substitua o sensor de freio."]},
+rBrkOpen:{c:"Sensor/manete de freio (não detecta)",d:"O sinal de corte não chega à controladora: sensor desalinhado, fio solto ou chave defeituosa.",a:["Verifique alinhamento do ímã e da chave.","Meça o sinal do sensor ao frear: deve mudar de estado.","Troque o sensor se o sinal não muda."]},
+r5v:{c:"Controladora (saída de 5V) ou curto no cabo",d:"Não há 5V no periférico. A controladora pode ter a saída de 5V queimada, ou há curto em cabo de acelerador/PAS/freio.",a:["Desconecte todos os periféricos e meça o 5V na saída da controladora.","Se voltar ao normal ao desconectar um periférico, o culpado é esse periférico ou cabo.","Se ainda não houver 5V, substitua a controladora."]},
+rThr:{c:"Acelerador (sensor Hall interno)",d:"O sinal é fixo, zero ou instável: sensor Hall do acelerador desgastado ou conector danificado.",a:["Inspecione conector e cabo.","Troque o acelerador (ou apenas o módulo Hall, se possível).","Confirme que a nova peça é compatível (tensão e conector)."]},
+rPas:{c:"Sensor PAS",d:"O sensor não gera sinal mesmo com alimentação. Provável sensor defeituoso ou fio rompido.",a:["Verifique cabo e conector.","Troque o sensor PAS.","Confirme que o novo é compatível com o disco magnético."]},
+rPasAl:{c:"PAS (alinhamento do disco magnético)",d:"A mecânica do PAS está solta ou desalinhada, gerando assistência falha ou nenhuma.",a:["Aperte o disco magnético na pedivela.","Ajuste distância sensor–ímã (2–3 mm).","Limpe sujeira e confirme que os ímãs não estão soltos."]},
+rPasInv:{c:"PAS instalado invertido",d:"O disco ou sensor está no sentido oposto: a assistência só funciona pedalando para trás.",a:["Inverta o sentido de montagem do disco ou do sensor.","Confirme que o sensor é para o lado correto (esquerdo/direito)."]},
+rCtrlPas:{c:"Controladora (leitura de PAS / configuração)",d:"O PAS gera sinal e os freios estão ok, mas a controladora não aciona o motor: configuração ou falha interna.",a:["Verifique nível de PAS/limites no display e parâmetros.","Teste com outra controladora compatível.","Se confirmado, substitua a controladora."]},
+rHall:{c:"Sensor Hall do motor (ou cabo Hall)",d:"Um ou mais sensores Hall do motor não geram sinal. Típico: trancos, zumbido, corte e erros de Hall.",a:["Verifique o cabo Hall na saída do cubo.","Troque a placa/sensores Hall do motor (3 sensores).","Se o cabo estiver danificado, repare a emenda."]},
+rWind:{c:"Motor (enrolamentos ou cabo de fase)",d:"As fases estão diferentes, abertas ou com fuga à carcaça: enrolamento ou cabo de fase danificado.",a:["Inspecione o cabo de fase na saída do cubo.","Reenrole ou substitua o motor.","Não use: risco de dano à controladora."]},
+rCtrl:{c:"Controladora",d:"Hall, fases, periféricos e bateria parecem ok. A causa mais provável é falha interna da controladora (MOSFETs, driver) ou configuração incompatível.",a:["Confirme que a controladora é compatível com tensão e motor.","Teste com controladora conhecida e compatível, se tiver.","Substitua a controladora se o problema se repetir."]},
+rMec:{c:"Mecânica do motor/roda (rolamentos ou freio arrastando)",d:"A roda não gira livre: atrito excessivo sobrecarrega o motor e o aquece.",a:["Verifique freio arrastando e rolamentos.","Folga ou ruído: substitua rolamentos.","Teste novamente após correção."]},
+rWire:{c:"Fiação/conectores subdimensionados ou soltos",d:"Conectores quentes ou fio fino indicam resistência elevada e queda de tensão.",a:["Troque conectores queimados.","Use bitola adequada à corrente.","Verifique a corrente configurada na controladora."]}
+};
+const K="ve_diag_v1";
+let st;
+try{st=JSON.parse(localStorage.getItem(K))}catch(e){}
+if(!st)st={path:[],res:null};
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(st))}catch(e){}};
+const app=document.getElementById("app");
+const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+function cur(){return st.path.length?st.path[st.path.length-1].next:"s"}
+function pick(i){
+ const id=cur(),nx=n[id].o[i][1];
+ st.path.push({id,i,next:nx});
+ if(r[nx]){st.res=nx}
+ save();render();
+}
+function back(){st.path.pop();st.res=null;save();render()}
+function reset(){st={path:[],res:null};save();render();window.scrollTo(0,0)}
+function render(){
+ if(st.res&&r[st.res]){
+  const x=r[st.res];
+  const hist=st.path.map(p=>`<li>${esc(n[p.id].q)} → <b>${esc(n[p.id].o[p.i][0])}</b></li>`).join("");
+  app.innerHTML=`<div class="card res"><span class="tag">Resultado do diagnóstico</span><h2>${esc(x.c)}</h2><p>${esc(x.d)}</p><b>Ação sugerida</b><ol>${x.a.map(a=>`<li>${esc(a)}</li>`).join("")}</ol></div>
+  <div class="card"><b>Caminho percorrido</b><ol class="hist">${hist}</ol></div>
+  <button class="g" id="bk">← Voltar uma etapa</button>
+  <button class="p" id="nv">🔄 Realizar novo diagnóstico</button>`;
+  document.getElementById("nv").onclick=reset;
+  document.getElementById("bk").onclick=back;
+  return;
+ }
+ const id=cur(),x=n[id];
+ const pct=Math.min(90,st.path.length*18);
+ app.innerHTML=`<div class="bar"><i style="width:${pct}%"></i></div><div class="card"><p class="q">${esc(x.q)}</p>${x.i?`<details><summary>ℹ️ Como funciona e o que esperar</summary><p>${esc(x.i)}</p></details>`:""}${x.t?`<div class="test"><b>🔧 Teste sugerido</b>${esc(x.t)}</div>`:""}${x.o.map((o,i)=>`<button data-i="${i}">${esc(o[0])}</button>`).join("")}</div>${st.path.length?'<button class="g" id="bk">← Voltar</button>':""}`;
+ app.querySelectorAll("button[data-i]").forEach(b=>b.onclick=()=>pick(+b.dataset.i));
+ const bk=document.getElementById("bk");if(bk)bk.onclick=back;
+}
+render();
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+</script>
+</body>
+</html>
